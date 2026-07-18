@@ -1,0 +1,31 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: arc-runner-set
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
+
+      - name: fmt
+        run: tofu fmt -check -recursive
+
+      - name: init
+        run: tofu init -backend=false
+
+      - name: validate
+        run: tofu validate
+
+      - name: validate example
+        working-directory: examples/basic
+        run: |
+          tofu init -backend=false
+          tofu validate
