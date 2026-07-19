@@ -7,7 +7,7 @@ instance with an encrypted gp3 root volume and IMDSv2 required by default.
 
 ```hcl
 module "ec2" {
-  source = "github.com/cybercapybara/terraform-aws-ec2"
+  source = "github.com/moveeeax/terraform-aws-ec2"
 
   name          = "prod-app"
   ami           = "ami-0abcdef1234567890"
