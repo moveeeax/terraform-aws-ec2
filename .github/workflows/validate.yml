@@ -24,8 +24,14 @@ jobs:
       - name: validate
         run: tofu validate
 
-      - name: validate example
-        working-directory: examples/basic
+      - name: test
+        run: tofu test
+
+      - name: validate examples
         run: |
-          tofu init -backend=false
-          tofu validate
+          for dir in examples/*/; do
+            echo "::group::$dir"
+            tofu -chdir="$dir" init -backend=false
+            tofu -chdir="$dir" validate
+            echo "::endgroup::"
+          done
