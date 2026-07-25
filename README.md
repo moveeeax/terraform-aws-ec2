@@ -7,7 +7,7 @@ instance with an encrypted gp3 root volume and IMDSv2 required by default.
 
 ```hcl
 module "ec2" {
-  source = "github.com/moveeeax/terraform-aws-ec2"
+  source = "github.com/moveeeax/terraform-aws-ec2?ref=v1.0.0"
 
   name          = "prod-app"
   ami           = "ami-0abcdef1234567890"
@@ -42,9 +42,9 @@ A runnable example lives in [`examples/basic`](examples/basic).
 | `security_group_ids`          | Security group IDs to attach to the instance.                       | `list(string)` | `[]`          |    no    |
 | `associate_public_ip_address` | Whether to associate a public IP address.                           | `bool`         | `false`       |    no    |
 | `monitoring`                  | Whether to enable detailed CloudWatch monitoring.                   | `bool`         | `false`       |    no    |
-| `user_data`                   | User data script to run at instance launch.                         | `string`       | `null`        |    no    |
-| `root_volume_type`            | Type of the root EBS volume.                                        | `string`       | `"gp3"`       |    no    |
-| `root_volume_size`            | Size of the root EBS volume in GiB.                                 | `number`       | `8`           |    no    |
+| `user_data`                   | User data script to run at instance launch. Sensitive.              | `string`       | `null`        |    no    |
+| `root_volume_type`            | Type of the root EBS volume. One of `gp2`, `gp3`, `io1`, `io2`, `standard`. | `string` | `"gp3"`  |    no    |
+| `root_volume_size`            | Size of the root EBS volume in GiB (1–16384).                       | `number`       | `8`           |    no    |
 | `root_volume_encrypted`       | Whether the root EBS volume is encrypted.                           | `bool`         | `true`        |    no    |
 | `tags`                        | Tags applied to the instance.                                       | `map(string)`  | `{}`          |    no    |
 
@@ -57,6 +57,27 @@ A runnable example lives in [`examples/basic`](examples/basic).
 | `private_ip`        | Private IPv4 address of the instance.               |
 | `public_ip`         | Public IPv4 address of the instance, if assigned.   |
 | `availability_zone` | Availability zone the instance runs in.             |
+
+## A note on `user_data`
+
+`user_data` is declared `sensitive`, so Terraform redacts it from plan output and
+CI logs. That is not the same as keeping it secret: EC2 stores user data
+unencrypted, it lands in the instance metadata service, and any process on the
+instance can read it. Fetch real secrets at boot from SSM Parameter Store or
+Secrets Manager instead of baking them into the launch script.
+
+## Development
+
+The module ships a [`terraform test`](tests) suite that runs against a mocked
+AWS provider, so it needs no credentials and no network:
+
+```sh
+terraform init -backend=false
+terraform test
+```
+
+The test suite requires Terraform or OpenTofu >= 1.7 for `mock_provider`; the
+module itself still supports >= 1.5.
 
 ## License
 
