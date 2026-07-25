@@ -6,6 +6,11 @@ variable "name" {
 variable "ami" {
   description = "AMI ID to launch the instance from."
   type        = string
+
+  validation {
+    condition     = can(regex("^ami-[0-9a-f]{8}([0-9a-f]{9})?$", var.ami))
+    error_message = "The ami value must be an AMI ID, for example \"ami-0abcdef1234567890\"."
+  }
 }
 
 variable "instance_type" {
@@ -45,21 +50,38 @@ variable "monitoring" {
 }
 
 variable "user_data" {
-  description = "User data script to run at instance launch."
+  description = <<-EOT
+    User data script to run at instance launch. Marked sensitive so that it is
+    redacted from plan output and CI logs, because user data is a common place
+    for bootstrap credentials to end up. Note that EC2 stores user data
+    unencrypted and any process on the instance can read it from IMDS, so
+    prefer SSM Parameter Store or Secrets Manager for real secrets.
+  EOT
   type        = string
   default     = null
+  sensitive   = true
 }
 
 variable "root_volume_type" {
   description = "Type of the root EBS volume."
   type        = string
   default     = "gp3"
+
+  validation {
+    condition     = contains(["gp2", "gp3", "io1", "io2", "standard"], var.root_volume_type)
+    error_message = "The root_volume_type value must be one of gp2, gp3, io1, io2 or standard."
+  }
 }
 
 variable "root_volume_size" {
   description = "Size of the root EBS volume in GiB."
   type        = number
   default     = 8
+
+  validation {
+    condition     = var.root_volume_size >= 1 && var.root_volume_size <= 16384 && floor(var.root_volume_size) == var.root_volume_size
+    error_message = "The root_volume_size value must be a whole number of GiB between 1 and 16384."
+  }
 }
 
 variable "root_volume_encrypted" {
