@@ -105,3 +105,110 @@ run "rejects_out_of_range_root_volume_size" {
 
   expect_failures = [var.root_volume_size]
 }
+
+run "rejects_root_volume_size_above_max" {
+  command = plan
+
+  variables {
+    root_volume_size = 16385
+  }
+
+  expect_failures = [var.root_volume_size]
+}
+
+run "rejects_io1_root_volume_without_iops" {
+  command = plan
+
+  variables {
+    root_volume_type = "io1"
+  }
+
+  expect_failures = [aws_instance.this]
+}
+
+run "accepts_io1_root_volume_with_iops" {
+  command = plan
+
+  variables {
+    root_volume_type = "io1"
+    root_volume_iops = 100
+  }
+
+  assert {
+    condition     = aws_instance.this.root_block_device[0].iops == 100
+    error_message = "The configured IOPS value must be passed through to the root volume."
+  }
+}
+
+run "rejects_throughput_on_non_gp3_volume" {
+  command = plan
+
+  variables {
+    root_volume_type       = "gp2"
+    root_volume_throughput = 125
+  }
+
+  expect_failures = [aws_instance.this]
+}
+
+run "accepts_multiple_optional_flags_together" {
+  command = plan
+
+  variables {
+    key_name                    = "ops-keypair"
+    security_group_ids          = ["sg-0123456789abcdef0", "sg-0fedcba9876543210"]
+    monitoring                  = true
+    associate_public_ip_address = true
+    subnet_id                   = "subnet-0abc123"
+  }
+
+  assert {
+    condition     = aws_instance.this.key_name == "ops-keypair"
+    error_message = "The key_name must be applied even when other optional flags are also set."
+  }
+
+  assert {
+    condition     = length(aws_instance.this.vpc_security_group_ids) == 2
+    error_message = "All supplied security group IDs must be applied together with the other optional flags."
+  }
+
+  assert {
+    condition     = aws_instance.this.monitoring == true
+    error_message = "Detailed monitoring must be honored alongside the other optional flags."
+  }
+
+  assert {
+    condition     = aws_instance.this.associate_public_ip_address == true
+    error_message = "The public IP opt-in must be honored alongside the other optional flags."
+  }
+}
+
+run "initial_apply" {
+  command = apply
+
+  variables {
+    name       = "unit-test"
+    ami        = "ami-0abcdef1234567890"
+    monitoring = false
+  }
+
+  assert {
+    condition     = aws_instance.this.monitoring == false
+    error_message = "The instance must start with monitoring disabled."
+  }
+}
+
+run "update_monitoring_in_place" {
+  command = apply
+
+  variables {
+    name       = "unit-test"
+    ami        = "ami-0abcdef1234567890"
+    monitoring = true
+  }
+
+  assert {
+    condition     = aws_instance.this.monitoring == true
+    error_message = "Enabling monitoring on an already-applied instance must update it in place rather than being silently ignored."
+  }
+}
