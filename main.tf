@@ -12,6 +12,8 @@ resource "aws_instance" "this" {
     volume_type = var.root_volume_type
     volume_size = var.root_volume_size
     encrypted   = var.root_volume_encrypted
+    iops        = var.root_volume_iops
+    throughput  = var.root_volume_throughput
   }
 
   metadata_options {
@@ -20,4 +22,16 @@ resource "aws_instance" "this" {
   }
 
   tags = merge(var.tags, { Name = var.name })
+
+  lifecycle {
+    precondition {
+      condition     = !contains(["io1", "io2"], var.root_volume_type) || var.root_volume_iops != null
+      error_message = "root_volume_iops must be set when root_volume_type is \"io1\" or \"io2\"; AWS has no default IOPS for these volume types."
+    }
+
+    precondition {
+      condition     = var.root_volume_throughput == null || var.root_volume_type == "gp3"
+      error_message = "root_volume_throughput may only be set when root_volume_type is \"gp3\"."
+    }
+  }
 }
