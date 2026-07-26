@@ -90,6 +90,23 @@ variable "root_volume_encrypted" {
   default     = true
 }
 
+variable "root_volume_iops" {
+  description = <<-EOT
+    Provisioned IOPS for the root EBS volume. AWS requires this to be set
+    explicitly when root_volume_type is "io1" or "io2" (there is no default);
+    it is an optional performance tuning knob for "gp3" and ignored for other
+    volume types.
+  EOT
+  type        = number
+  default     = null
+}
+
+variable "root_volume_throughput" {
+  description = "Throughput (MiB/s) for the root EBS volume. Only applies to \"gp3\" volumes."
+  type        = number
+  default     = null
+}
+
 variable "tags" {
   description = "Tags applied to the instance."
   type        = map(string)

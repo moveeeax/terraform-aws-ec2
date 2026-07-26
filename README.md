@@ -46,6 +46,8 @@ A runnable example lives in [`examples/basic`](examples/basic).
 | `root_volume_type`            | Type of the root EBS volume. One of `gp2`, `gp3`, `io1`, `io2`, `standard`. | `string` | `"gp3"`  |    no    |
 | `root_volume_size`            | Size of the root EBS volume in GiB (1–16384).                       | `number`       | `8`           |    no    |
 | `root_volume_encrypted`       | Whether the root EBS volume is encrypted.                           | `bool`         | `true`        |    no    |
+| `root_volume_iops`            | Provisioned IOPS for the root volume. Required when `root_volume_type` is `io1` or `io2`; optional tuning for `gp3`. | `number` | `null` |    no    |
+| `root_volume_throughput`      | Throughput (MiB/s) for the root volume. Only applies to `gp3`.      | `number`       | `null`        |    no    |
 | `tags`                        | Tags applied to the instance.                                       | `map(string)`  | `{}`          |    no    |
 
 ## Outputs
@@ -65,6 +67,14 @@ CI logs. That is not the same as keeping it secret: EC2 stores user data
 unencrypted, it lands in the instance metadata service, and any process on the
 instance can read it. Fetch real secrets at boot from SSM Parameter Store or
 Secrets Manager instead of baking them into the launch script.
+
+## A note on `root_volume_type`
+
+AWS has no default IOPS for `io1`/`io2` volumes, so selecting either of those
+types without also setting `root_volume_iops` fails at plan time with a clear
+error instead of failing later during `apply`. `root_volume_throughput` only
+applies to `gp3` and is likewise rejected at plan time if set alongside any
+other volume type.
 
 ## Development
 
