@@ -7,7 +7,7 @@ instance with an encrypted gp3 root volume and IMDSv2 required by default.
 
 ```hcl
 module "ec2" {
-  source = "github.com/moveeeax/terraform-aws-ec2?ref=v1.0.0"
+  source = "github.com/moveeeax/terraform-aws-ec2?ref=v2.0.0"
 
   name          = "prod-app"
   ami           = "ami-0abcdef1234567890"
@@ -22,6 +22,10 @@ module "ec2" {
 ```
 
 A runnable example lives in [`examples/basic`](examples/basic).
+
+The `v1.0.0` tag points to an earlier, unrelated implementation of this module
+with a different set of inputs. It is kept so existing callers keep working,
+but this README describes `v2.0.0` and later.
 
 ## Requirements
 
