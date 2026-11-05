@@ -96,3 +96,7 @@ module itself still supports >= 1.5.
 ## License
 
 [MIT](LICENSE)
+
+---
+
+**Archived on 2026-11-05.** a thin wrapper over one aws_instance (15 inputs, no IAM, no extra volumes). terraform-aws-modules/ec2-instance already ships IMDSv2-by-default plus everything below. The secure-defaults angle is real but small. If you keep it, the features below are the minimum.
